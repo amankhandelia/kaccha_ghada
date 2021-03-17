@@ -9,13 +9,15 @@ import numpy as np
     Copyright 2019 Joel Grus, 978-1-492-04113-9.
 """
 class NaiveBayesClassifier:
-    def __init__(self, categories):
+    def __init__(self, categories, smoothing_factor):
         self.probs = {}
         self.categories = categories
         self.category_count = {category:0 for category in self.categories}
         self.datapoints_count = 0
         self.pos = 'pos'
         self.neg = 'neg'
+        self._initialize_counters()
+        self.smoothing_factor = smoothing_factor
         pass
     
 
@@ -34,12 +36,12 @@ class NaiveBayesClassifier:
                 self.probs[datapoint.category][self.pos][token] += 1
                 for category in self.categories:
                     if category != datapoint.category:
-                        self.probs[datapoint.category][self.neg][token] += 1
+                        self.probs[category][self.neg][token] += 1
         pass
 
-    def _calculate_probabilities(self, token:str, category:str, smooting_factor=1) -> float:
-        prob_if_token_given_category = self.probs[category][self.pos][token]/self.category_count[category]
-        prob_if_token_given_not_category = self.probs[category][self.neg][token]/(self.datapoints_count - self.category_count[category])
+    def _calculate_probabilities(self, token:str, category:str) -> float:
+        prob_if_token_given_category = (self.smoothing_factor + self.probs[category][self.pos][token])/(self.category_count[category] + 2 * self.smoothing_factor)
+        prob_if_token_given_not_category = (self.smoothing_factor + self.probs[category][self.neg][token])/(self.datapoints_count - self.category_count[category] + 2 * self.smoothing_factor)
         prob_if_category_given_token = prob_if_token_given_category/ (prob_if_token_given_category + prob_if_token_given_not_category)
         return prob_if_category_given_token
 
@@ -51,4 +53,19 @@ class NaiveBayesClassifier:
             for j, token in enumerate(tokens):
                 temp_probs[j] = self._calculate_probabilities(token, category)
             probs[i] = np.exp(np.sum(np.log(temp_probs)))
-        return self.categories[np.argmax(probs)]
+        print(probs)
+        return (self.categories[np.argmax(probs)], probs[np.argmax(probs)])
+
+class Datapoint(NamedTuple):
+    text:str
+    category:str
+    
+def test_run():
+    categories = ["spam", "ham"]
+    training_examples = [Datapoint("spam rules", "spam"), Datapoint("ham rules", "ham"), Datapoint("hello ham", "ham")]
+    clf = NaiveBayesClassifier(categories, smoothing_factor=0.5)
+    clf.train(training_examples)
+    print(clf.predict("hello spam"))
+
+if __name__ == "__main__":
+    test_run()
