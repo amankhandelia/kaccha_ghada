@@ -46,6 +46,8 @@ scipy==1.7.0
 six==1.16.0
 tokenizers==0.10.3
 toolz==0.11.1
+torch==1.9.0
+torch-xla @ https://storage.googleapis.com/tpu-pytorch/wheels/tpuvm/torch_xla-1.9-cp38-cp38-linux_x86_64.whl
 tqdm==4.61.2
 transformers @ git+https://github.com/huggingface/transformers@534f6eb9f1f8910a4912ccccd79f1f974c625168
 typing-extensions==3.10.0.0
