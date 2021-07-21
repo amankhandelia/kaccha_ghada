@@ -12,10 +12,15 @@ def save_readable_vocab(model_name, readable_csv_path, use_fast=False):
     tokens_df.to_csv(readable_csv_path, index=False, header=False)
     return
 
-def tokenize_readable(text:str, tokenizer:AutoTokenizer):
+def get_readable_tokenization(text:str, tokenizer:AutoTokenizer):
     tokens = tokenizer.tokenize(text)
     readable_tokens = [tokenizer.convert_tokens_to_string([token]) for token in tokens]
     return readable_tokens
+
+def get_identity_tokenization(text:str, tokenizer:AutoTokenizer):
+    tokens = tokenizer.tokenize(text)
+    return tokenizer.convert_tokens_to_string(tokens)
+
 
    
 
