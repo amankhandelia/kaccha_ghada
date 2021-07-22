@@ -1,5 +1,6 @@
 from transformers import AutoTokenizer, RobertaTokenizer, RobertaTokenizerFast
 import pandas as pd
+from typing import List
 
 
 def save_readable_vocab(model_name, readable_csv_path, use_fast=False):
@@ -20,6 +21,13 @@ def get_readable_tokenization(text:str, tokenizer:AutoTokenizer):
 def get_identity_tokenization(text:str, tokenizer:AutoTokenizer):
     tokens = tokenizer.tokenize(text)
     return tokenizer.convert_tokens_to_string(tokens)
+
+def test_tokenization(model_name:str, from_flax:bool, use_fast:bool, add_prefix_space:bool, example_texts:List):
+    tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=use_fast, add_prefix_space=add_prefix_space, from_flax=from_flax)
+    output = []
+    for text in example_texts:
+        output.append((text, get_readable_tokenization(text, tokenizer), get_identity_tokenization(text, tokenizer)))
+    return output
 
 
    
