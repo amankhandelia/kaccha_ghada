@@ -1,6 +1,8 @@
 from transformers import AutoTokenizer, RobertaTokenizer, RobertaTokenizerFast
 import pandas as pd
-from typing import List
+from typing import List, Union
+import string
+import regex as re
 
 
 def save_readable_vocab(tokenizer, readable_csv_path):
@@ -36,11 +38,59 @@ def test_tokenization(model_name:str, from_flax:bool, use_fast:bool, add_prefix_
         output.append((text, get_readable_tokenization(text, tokenizer), get_identity_tokenization(text, tokenizer)))
     return output
 
-def devnagri_unicode_block():
+def get_devnagri_unicode_block():
     devnagri_block_len = 128
     devnagri_block_start = 2304
     devnagri_chars = [chr(i) for i in range(devnagri_block_start, devnagri_block_start + devnagri_block_len)]
     return devnagri_chars
+
+def keep_devnagri(text:str):
+    """
+    Remove all non Devnagri characters from the text.
+    Code adapted from https://huggingface.co/flax-community/roberta-base-mr/blob/64d2c745f264f09c3d5b678a718746b2613887db/mr_clean_text.py
+    
+    @param text: str Text to be cleaned
+    @return: Union[str, bool]
+    """
+    pattern = r'[\p{Devanagari}0-9।\s\.\!]+'
+    
+    # regex pattern for all puntuation symbols
+    punctuation_regex = re.compile("[" + re.escape(string.punctuation) + string.digits + "|" + "]")
+
+    # keep only the text which is in devnagari script
+    cleaned = "".join([tok.group() for tok in re.finditer(pattern, text)])
+
+    # remove any extra space between words
+    cleaned = re.sub(r"[ ]+", " ", cleaned)
+    
+    # identify if the clean text only consists of punctuation
+    is_just_punctuation = len(re.sub(punctuation_regex, "", cleaned)) == 0
+
+    return cleaned, is_just_punctuation
+
+def get_garbage_data(text:str):
+    """
+    Get all the text after removing Devnagri.
+    Code adapted from https://huggingface.co/flax-community/roberta-base-mr/blob/64d2c745f264f09c3d5b678a718746b2613887db/mr_clean_text.py
+    
+    @param text: str Text to be cleaned
+    @return: Union[str, bool]
+    """
+    pattern = r'[\p{Devanagari}।]+'
+    
+    # regex pattern for all puntuation symbols
+    punctuation_regex = re.compile("[" + re.escape(string.punctuation) + string.digits + "|" + "]")
+
+    # get the garbage text
+    garbage = re.sub(re.compile(pattern), "", text)
+
+    # remove any extra space between words
+    garbage = re.sub(r"[ ]+", " ", garbage)
+
+    # identify if the clean text only consists of punctuation
+    is_just_punctuation = len(re.sub(punctuation_regex, "", garbage)) == 0
+
+    return garbage, is_just_punctuation
 
 def get_all_devnagri_char_by_category(category=None):
     matra = ['ँ', 'ं', 'ः', '़', 'ा', 'ि', 'ी', 'ु', 'ू', 'ृ', 'ॄ', 'ॅ', 'े', 'ै', 'ॉ', 'ो', 'ौ', '्']
